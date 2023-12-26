@@ -3,7 +3,8 @@ use bevy::prelude::*;
 const RENDER_SCALE: f32 = 2.0;
 const BLOCK_TEXTURE_SIZE: f32 = 16.0;
 const CHUNK_SIZE: usize = 16; //blocks^3
-const WORLD_SIZE: usize = 9; //chunks^2
+
+// const WORLD_SIZE: usize = 9; //chunks^2
 
 // const GRASS =
 
@@ -21,14 +22,7 @@ struct MainCamera;
 struct Block;
 
 #[derive(Component)]
-struct Chunk {
-    wx: i32,
-    wy: i32,
-    blocks: [[[u32; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_SIZE],
-    inactive_render: [[u32; CHUNK_SIZE]; CHUNK_SIZE],
-    active: bool,
-    dirty: bool,
-}
+struct Chunk;
 
 fn startup(
     mut commands: Commands,
@@ -39,14 +33,7 @@ fn startup(
     commands.spawn((Camera2dBundle::default(), MainCamera));
 
     //generate chunk
-    commands.spawn((Chunk {
-        wx: 0,
-        wy: 0,
-        blocks: [[[3; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_SIZE],
-        inactive_render: [[3; CHUNK_SIZE]; CHUNK_SIZE],
-        active: true,
-        dirty: false,
-    },));
+    commands.spawn((Chunk,));
 
     //add block texture to texture_atlases resource
     let texture_handle = asset_server.load("blocks.png");
