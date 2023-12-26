@@ -63,7 +63,6 @@ fn startup(
                     SpriteSheetBundle {
                         texture_atlas: texture_atlas_handle.clone(),
                         sprite: TextureAtlasSprite::new(3),
-                        // transform: Transform::from_translation(Vec3::new(x as f32*16 as f32, (y as f32 * 16.0) - (x as f32 * 10.67) as f32,1.0 )).with_scale(Vec3::new(2.0, 2.0, 2.0)),
                         transform: Transform::from_translation(Vec3::new(
                             (x as f32 * BLOCK_TEXTURE_SIZE * RENDER_SCALE / 2.0)
                                 - (y as f32 * BLOCK_TEXTURE_SIZE * RENDER_SCALE / 2.0) as f32,
