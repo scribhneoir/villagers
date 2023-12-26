@@ -7,6 +7,7 @@ edition = "2021"
 
 [dependencies]
 bevy = "0.12.1"
+noise = "0.8.2"
 
 # Enable max optimizations for dependencies, but not for our code:
 [profile.dev.package."*"]
