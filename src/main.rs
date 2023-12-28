@@ -7,7 +7,7 @@ const WORLD_SEED: u32 = 187756;
 const RENDER_SCALE: f32 = 2.0;
 const BLOCK_TEXTURE_SIZE: f32 = 24.0;
 const CHUNK_SIZE: usize = 16; //blocks^3
-const SAMPLE_SCALE: f64 = 0.007;
+const SAMPLE_SCALE: f64 = 0.06;
 const WATER_LEVEL: usize = 4;
 
 // const WORLD_SIZE: usize = 9; //chunks^2
@@ -16,8 +16,8 @@ const DIRT: usize = 0;
 const GRASS: usize = 1;
 const STONE: usize = 2;
 const SAND: usize = 3;
-const LOG: usize = 4;
-const LEAF: usize = 5;
+// const LOG: usize = 4;
+// const LEAF: usize = 5;
 
 const WATER: usize = 24;
 const WATER_TOP: usize = 25;
@@ -54,9 +54,9 @@ fn spawn_block(
             transform: Transform::from_translation(Vec3::new(
                 (x as f32 * BLOCK_TEXTURE_SIZE * RENDER_SCALE / 2.0)
                     - (y as f32 * BLOCK_TEXTURE_SIZE * RENDER_SCALE / 2.0) as f32,
-                -(y as f32 * BLOCK_TEXTURE_SIZE * RENDER_SCALE / 3.0)
-                    - (x as f32 * BLOCK_TEXTURE_SIZE * RENDER_SCALE / 3.0)
-                    + (z as f32 * BLOCK_TEXTURE_SIZE * RENDER_SCALE / (7.0 / 3.0)) as f32,
+                -(y as f32 * BLOCK_TEXTURE_SIZE * RENDER_SCALE / 4.0)
+                    - (x as f32 * BLOCK_TEXTURE_SIZE * RENDER_SCALE / 4.0)
+                    + (z as f32 * BLOCK_TEXTURE_SIZE * RENDER_SCALE / 3.0) as f32,
                 1.0,
             ))
             .with_scale(Vec3::splat(RENDER_SCALE)),
@@ -94,9 +94,14 @@ fn startup(
     //spawn blocks for chunk
     for x in 0..CHUNK_SIZE {
         for y in 0..CHUNK_SIZE {
-            let height_noise = perlin.get([x as f64 * SAMPLE_SCALE, y as f64 * SAMPLE_SCALE]);
-            let stone_h = ((height_noise * (CHUNK_SIZE as f64)) * 1.2) as usize;
-            let dirt_h = ((stone_h as f64 + (height_noise * 5.0)) * 1.8) as usize;
+            let stone_h = ((perlin.get([x as f64 * SAMPLE_SCALE, y as f64 * SAMPLE_SCALE, 0.0])
+                * (CHUNK_SIZE as f64))
+                * 1.2
+                + 1.0) as usize;
+            let dirt_h = ((stone_h as f64
+                + (perlin.get([x as f64 * SAMPLE_SCALE, y as f64 * SAMPLE_SCALE, 2.0]) * 5.0))
+                * 1.2
+                + 1.0) as usize;
 
             for z in 0..stone_h {
                 spawn_block(&mut commands, texture_atlas_handle.clone(), STONE, x, y, z);
