@@ -2,7 +2,7 @@
 
 ## Alpha
 ### Terain generation
-- [ ] Flesh out chunk gen
+- [x] Flesh out chunk gen
 - [ ] Tree generation
 - [ ] Multiple chunks
 - [ ] Chunk parent / block child
