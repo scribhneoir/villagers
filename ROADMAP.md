@@ -3,7 +3,7 @@
 ## Alpha
 ### Terain generation
 - [x] Flesh out chunk gen
-- [ ] Tree generation
+- [x] Tree generation
 - [ ] Multiple chunks
 - [ ] Chunk parent / block child
 - [ ] Block surface spawining
