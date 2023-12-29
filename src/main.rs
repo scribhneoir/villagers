@@ -6,21 +6,22 @@ const WORLD_SEED: u32 = 10;
 
 const RENDER_SCALE: f32 = 0.5;
 const BLOCK_TEXTURE_SIZE: f32 = 24.0;
-const CHUNK_SIZE: usize = 44; //blocks^3
-const SAMPLE_SCALE: f64 = 0.02;
+const CHUNK_SIZE: usize = 20; //blocks^3
+const SAMPLE_SCALE: f64 = 0.01;
 const WATER_LEVEL: usize = 4;
+const TREE_HEIGHT: usize = 5;
 
-// const WORLD_SIZE: usize = 9; //chunks^2
+const WORLD_SIZE: usize = 8; //chunks^2
 
-const DIRT: usize = 0;
-const GRASS: usize = 1;
-const STONE: usize = 2;
-const SAND: usize = 3;
-const LOG: usize = 4;
-const LEAF: usize = 5;
+const DIRT: i32 = 0;
+const GRASS: i32 = 1;
+const STONE: i32 = 2;
+const SAND: i32 = 3;
+const LOG: i32 = 4;
+const LEAF: i32 = 5;
 
-const WATER: usize = 24;
-const WATER_TOP: usize = 25;
+const WATER: i32 = 24;
+const WATER_TOP: i32 = 25;
 
 fn main() {
     App::new()
@@ -32,11 +33,32 @@ fn main() {
 #[derive(Component)]
 struct MainCamera;
 
+#[derive(Resource)]
+struct World {
+    perlin: Perlin,
+}
+
 #[derive(Component)]
 struct Block;
 
 #[derive(Component)]
-struct Chunk;
+struct Chunk {
+    blocks: [[[i32; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_SIZE],
+}
+
+#[derive(Component)]
+struct TwoDPosition {
+    x: f32,
+    y: f32,
+    sort: f32,
+}
+
+#[derive(Component)]
+struct ChunkPosition {
+    x: usize,
+    y: usize,
+    z: usize,
+}
 
 fn check_surroundings(
     chunk: &[[[i32; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_SIZE],
@@ -77,112 +99,70 @@ fn check_surroundings(
     return true;
 }
 
-fn spawn_block(
-    commands: &mut Commands,
-    texture_atlas_handle: Handle<TextureAtlas>,
-    sprite_index: usize,
-    x: usize,
-    y: usize,
-    z: usize,
-) -> Entity {
-    return commands
-        .spawn((
-            Block,
-            SpriteSheetBundle {
-                texture_atlas: texture_atlas_handle,
-                sprite: TextureAtlasSprite::new(sprite_index),
-                transform: Transform::from_translation(Vec3::new(
-                    (x as f32 * BLOCK_TEXTURE_SIZE * RENDER_SCALE / 2.0)
-                        - (y as f32 * BLOCK_TEXTURE_SIZE * RENDER_SCALE / 2.0) as f32,
-                    -(y as f32 * BLOCK_TEXTURE_SIZE * RENDER_SCALE / 4.0)
-                        - (x as f32 * BLOCK_TEXTURE_SIZE * RENDER_SCALE / 4.0)
-                        + (z as f32 * BLOCK_TEXTURE_SIZE * RENDER_SCALE / (7.0 / 3.0)) as f32,
-                    1.0,
-                ))
-                .with_scale(Vec3::splat(RENDER_SCALE)),
-                ..Default::default()
-            },
-        ))
-        .id();
-}
-
-fn startup(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
-) {
-    //spawn 2d camera
-    commands.spawn((Camera2dBundle::default(), MainCamera));
-
-    //generate chunk
-    commands.spawn((Chunk,));
-
+fn spawn_chunk(
+    perlin: &Perlin,
+    x_off: f64,
+    y_off: f64,
+) -> [[[i32; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_SIZE] {
     let mut chunk: [[[i32; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_SIZE] =
         [[[-1; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_SIZE];
-    //add block texture to texture_atlases resource
-    let texture_handle = asset_server.load("blocks.png");
-    let texture_atlas = TextureAtlas::from_grid(
-        texture_handle,
-        Vec2::splat(BLOCK_TEXTURE_SIZE),
-        24,
-        24,
-        None,
-        None,
-    );
-    let texture_atlas_handle = texture_atlases.add(texture_atlas);
 
-    //generate perlin noise
-    let perlin = Perlin::new(WORLD_SEED);
-
-    //spawn blocks for chunk
     for x in 0..CHUNK_SIZE {
         for y in 0..CHUNK_SIZE {
-            let stone_h = ((perlin.get([x as f64 * SAMPLE_SCALE, y as f64 * SAMPLE_SCALE, 0.0])
-                * (CHUNK_SIZE as f64))
+            let stone_h = ((perlin.get([
+                (x as f64 + x_off) * SAMPLE_SCALE,
+                (y as f64 + y_off) * SAMPLE_SCALE,
+                0.0,
+            ]) * (CHUNK_SIZE as f64))
                 * 1.2
                 + 1.0) as usize;
             let dirt_h = ((stone_h as f64
-                + (perlin.get([x as f64 * SAMPLE_SCALE, y as f64 * SAMPLE_SCALE, 2.0]) * 5.0))
+                + (perlin.get([
+                    (x as f64 + x_off) * SAMPLE_SCALE,
+                    (y as f64 + y_off) * SAMPLE_SCALE,
+                    2.0,
+                ]) * 5.0))
                 * 1.2
                 + 1.0) as usize;
 
             for z in 0..stone_h {
-                chunk[x][y][z] = STONE as i32;
-                spawn_block(&mut commands, texture_atlas_handle.clone(), STONE, x, y, z);
+                chunk[x][y][z] = STONE;
             }
 
             for z in stone_h..dirt_h {
-                chunk[x][y][z] = DIRT as i32;
-                spawn_block(&mut commands, texture_atlas_handle.clone(), DIRT, x, y, z);
+                chunk[x][y][z] = DIRT;
             }
-            if dirt_h > WATER_LEVEL {
-                chunk[x][y][dirt_h] = GRASS as i32;
-                spawn_block(
-                    &mut commands,
-                    texture_atlas_handle.clone(),
-                    GRASS,
-                    x,
-                    y,
-                    dirt_h,
-                );
+            if dirt_h > WATER_LEVEL + 1 {
+                chunk[x][y][dirt_h] = GRASS;
                 //spawn trees
-                if perlin.get([x as f64 * SAMPLE_SCALE, y as f64 * SAMPLE_SCALE, 4.0]) > 0.2
+                if x > 2
+                    && y > 2
+                    && x < CHUNK_SIZE - 2
+                    && y < CHUNK_SIZE - 2
+                    && perlin.get([
+                        (x as f64 + x_off) * SAMPLE_SCALE,
+                        (y as f64 + y_off) * SAMPLE_SCALE,
+                        4.0,
+                    ]) > 0.2
                     && check_surroundings(
                         &chunk,
                         x,
                         y,
                         dirt_h + 5,
                         (perlin
-                            .get([x as f64 * SAMPLE_SCALE, y as f64 * SAMPLE_SCALE, 4.0])
+                            .get([
+                                (x as f64 + x_off) * SAMPLE_SCALE,
+                                (y as f64 + y_off) * SAMPLE_SCALE,
+                                4.0,
+                            ])
                             .abs()
                             * 5.0
                             + 3.0) as usize,
                     )
                 {
                     //spawn trunk
-                    for z in dirt_h..dirt_h + 5 {
-                        chunk[x][y][z] = LOG as i32;
-                        spawn_block(&mut commands, texture_atlas_handle.clone(), LOG, x, y, z);
+                    for z in dirt_h..dirt_h + TREE_HEIGHT {
+                        chunk[x][y][z] = LOG;
                     }
 
                     //spawn leaves
@@ -213,44 +193,112 @@ fn startup(
                         for j in y_min..y_max {
                             for k in z_min..z_max {
                                 {
-                                    chunk[i][j][k] = LEAF as i32;
-                                    spawn_block(
-                                        &mut commands,
-                                        texture_atlas_handle.clone(),
-                                        LEAF,
-                                        i,
-                                        j,
-                                        k,
-                                    );
+                                    chunk[i][j][k] = LEAF;
                                 }
                             }
                         }
                     }
                 }
-            } else if dirt_h == WATER_LEVEL {
-                chunk[x][y][dirt_h] = SAND as i32;
-                spawn_block(
-                    &mut commands,
-                    texture_atlas_handle.clone(),
-                    SAND,
-                    x,
-                    y,
-                    dirt_h,
-                );
+            } else if dirt_h == WATER_LEVEL || dirt_h == WATER_LEVEL + 1 {
+                chunk[x][y][dirt_h] = SAND;
             } else {
                 for z in dirt_h..WATER_LEVEL {
-                    chunk[x][y][z] = WATER as i32;
-                    spawn_block(&mut commands, texture_atlas_handle.clone(), WATER, x, y, z);
+                    chunk[x][y][z] = WATER;
                 }
-                chunk[x][y][WATER_LEVEL] = WATER_TOP as i32;
-                spawn_block(
-                    &mut commands,
-                    texture_atlas_handle.clone(),
-                    WATER_TOP,
-                    x,
-                    y,
-                    WATER_LEVEL,
-                );
+                chunk[x][y][WATER_LEVEL] = WATER_TOP;
+            }
+        }
+    }
+
+    //spawn chunk entity
+    return chunk;
+}
+
+fn spawn_block(
+    commands: &mut Commands,
+    texture_atlas_handle: Handle<TextureAtlas>,
+    sprite_index: i32,
+    x: f32,
+    y: f32,
+    z: f32,
+) -> Entity {
+    return commands
+        .spawn((
+            Block,
+            // ChunkPosition { x, y, z },
+            SpriteSheetBundle {
+                texture_atlas: texture_atlas_handle,
+                sprite: TextureAtlasSprite::new(sprite_index as usize),
+                transform: Transform::from_translation(Vec3::new(
+                    (x * BLOCK_TEXTURE_SIZE * RENDER_SCALE / 2.0)
+                        - (y * BLOCK_TEXTURE_SIZE * RENDER_SCALE / 2.0),
+                    -(y * BLOCK_TEXTURE_SIZE * RENDER_SCALE / 4.0)
+                        - (x * BLOCK_TEXTURE_SIZE * RENDER_SCALE / 4.0)
+                        + (z * BLOCK_TEXTURE_SIZE * RENDER_SCALE / (7.0 / 3.0)),
+                    1.0,
+                ))
+                .with_scale(Vec3::splat(RENDER_SCALE)),
+                ..Default::default()
+            },
+        ))
+        .id();
+}
+
+fn startup(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+) {
+    //add block texture to texture_atlases resource
+    let texture_handle = asset_server.load("blocks.png");
+    let texture_atlas = TextureAtlas::from_grid(
+        texture_handle,
+        Vec2::splat(BLOCK_TEXTURE_SIZE),
+        24,
+        24,
+        None,
+        None,
+    );
+    let texture_atlas_handle = texture_atlases.add(texture_atlas);
+
+    //spawn 2d camera
+    commands.spawn((Camera2dBundle::default(), MainCamera));
+
+    //generate perlin noise
+    let perlin = Perlin::new(WORLD_SEED);
+
+    //add world to resources
+    commands.insert_resource(World { perlin });
+
+    //generate chunks
+    for x in 0..WORLD_SIZE {
+        for y in 0..WORLD_SIZE {
+            let x_off = x as f32 * CHUNK_SIZE as f32;
+            let y_off = y as f32 * CHUNK_SIZE as f32;
+
+            let chunk = spawn_chunk(&perlin, x_off as f64, y_off as f64);
+
+            let chunk_ent = commands
+                .spawn((Chunk { blocks: chunk }, SpatialBundle::default()))
+                .id();
+
+            //spawn blocks for chunk
+            for x in 0..CHUNK_SIZE {
+                for y in 0..CHUNK_SIZE {
+                    for z in 0..CHUNK_SIZE {
+                        if chunk[x][y][z] != -1 {
+                            let block_ent = spawn_block(
+                                &mut commands,
+                                texture_atlas_handle.clone(),
+                                chunk[x][y][z],
+                                x as f32 + x_off,
+                                y as f32 + y_off,
+                                z as f32,
+                            );
+                            commands.entity(chunk_ent).push_children(&[block_ent]);
+                        }
+                    }
+                }
             }
         }
     }
