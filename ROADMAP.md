@@ -4,10 +4,9 @@
 ### Terain generation
 - [x] Flesh out chunk gen
 - [x] Tree generation
-- [ ] Multiple chunks
-- [ ] Chunk parent / block child
-- [ ] Block surface spawining
-- [ ] Active chunk spawn / despawn
+- [x] Multiple chunks
+- [x] Chunk parent / block child
+- [x] Block surface spawining
 ### Villager movement / collision
 - [ ] Make villager sprite
 - [ ] Temp move villager with keyboard

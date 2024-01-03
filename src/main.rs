@@ -47,17 +47,11 @@ struct Chunk {
 }
 
 #[derive(Component)]
-struct TwoDPosition {
-    x: f32,
-    y: f32,
-    sort: f32,
-}
-
-#[derive(Component)]
 struct ChunkPosition {
     x: usize,
     y: usize,
     z: usize,
+    active: bool,
 }
 
 fn check_surroundings(
@@ -99,7 +93,7 @@ fn check_surroundings(
     return true;
 }
 
-fn spawn_chunk(
+fn generate_chunk(
     perlin: &Perlin,
     x_off: f64,
     y_off: f64,
@@ -214,6 +208,72 @@ fn spawn_chunk(
     return chunk;
 }
 
+fn find_top_block(
+    chunk: &[[[i32; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_SIZE],
+    x: usize,
+    y: usize,
+    z: usize,
+) -> (i32, usize, usize, usize) {
+    let min_coor = x.min(y).min(z);
+    for i in 0..min_coor {
+        if chunk[x - i][y - i][z - i] != -1 {
+            return (chunk[x - i][y - i][z - i], x - i, y - i, z - i);
+        }
+    }
+    return (-1, 0, 0, 0);
+}
+
+fn spawn_visable_blocks(
+    commands: &mut Commands,
+    texture_atlas_handle: Handle<TextureAtlas>,
+    chunk: &[[[i32; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_SIZE],
+    chunk_ent: Entity,
+    x_off: f32,
+    y_off: f32,
+    z_off: f32,
+) {
+    for i in 0..CHUNK_SIZE {
+        for j in 0..CHUNK_SIZE {
+            let mut top_block_id = find_top_block(&chunk, i, j, CHUNK_SIZE - 1);
+            if top_block_id.0 > -1 {
+                let block_ent = spawn_block(
+                    commands,
+                    texture_atlas_handle.clone(),
+                    top_block_id.0,
+                    top_block_id.1 as f32 + x_off,
+                    top_block_id.2 as f32 + y_off,
+                    top_block_id.3 as f32 + z_off,
+                );
+                commands.entity(chunk_ent).push_children(&[block_ent]);
+            }
+            top_block_id = find_top_block(&chunk, i, CHUNK_SIZE - 1, j);
+            if top_block_id.0 > -1 {
+                let block_ent = spawn_block(
+                    commands,
+                    texture_atlas_handle.clone(),
+                    top_block_id.0,
+                    top_block_id.1 as f32 + x_off,
+                    top_block_id.2 as f32 + y_off,
+                    top_block_id.3 as f32 + z_off,
+                );
+                commands.entity(chunk_ent).push_children(&[block_ent]);
+            }
+            top_block_id = find_top_block(&chunk, CHUNK_SIZE - 1, i, j);
+            if top_block_id.0 > -1 {
+                let block_ent = spawn_block(
+                    commands,
+                    texture_atlas_handle.clone(),
+                    top_block_id.0,
+                    top_block_id.1 as f32 + x_off,
+                    top_block_id.2 as f32 + y_off,
+                    top_block_id.3 as f32 + z_off,
+                );
+                commands.entity(chunk_ent).push_children(&[block_ent]);
+            }
+        }
+    }
+}
+
 fn spawn_block(
     commands: &mut Commands,
     texture_atlas_handle: Handle<TextureAtlas>,
@@ -235,7 +295,7 @@ fn spawn_block(
                     -(y * BLOCK_TEXTURE_SIZE * RENDER_SCALE / 4.0)
                         - (x * BLOCK_TEXTURE_SIZE * RENDER_SCALE / 4.0)
                         + (z * BLOCK_TEXTURE_SIZE * RENDER_SCALE / (7.0 / 3.0)),
-                    1.0,
+                    x + y + z,
                 ))
                 .with_scale(Vec3::splat(RENDER_SCALE)),
                 ..Default::default()
@@ -273,33 +333,24 @@ fn startup(
     //generate chunks
     for x in 0..WORLD_SIZE {
         for y in 0..WORLD_SIZE {
-            let x_off = x as f32 * CHUNK_SIZE as f32;
-            let y_off = y as f32 * CHUNK_SIZE as f32;
+            let x_off = x as f32 * (CHUNK_SIZE as f32 - 1.0);
+            let y_off = y as f32 * (CHUNK_SIZE as f32 - 1.0);
 
-            let chunk = spawn_chunk(&perlin, x_off as f64, y_off as f64);
+            let chunk = generate_chunk(&perlin, x_off as f64, y_off as f64);
 
             let chunk_ent = commands
                 .spawn((Chunk { blocks: chunk }, SpatialBundle::default()))
                 .id();
 
-            //spawn blocks for chunk
-            for x in 0..CHUNK_SIZE {
-                for y in 0..CHUNK_SIZE {
-                    for z in 0..CHUNK_SIZE {
-                        if chunk[x][y][z] != -1 {
-                            let block_ent = spawn_block(
-                                &mut commands,
-                                texture_atlas_handle.clone(),
-                                chunk[x][y][z],
-                                x as f32 + x_off,
-                                y as f32 + y_off,
-                                z as f32,
-                            );
-                            commands.entity(chunk_ent).push_children(&[block_ent]);
-                        }
-                    }
-                }
-            }
+            spawn_visable_blocks(
+                &mut commands,
+                texture_atlas_handle.clone(),
+                &chunk,
+                chunk_ent,
+                x_off,
+                y_off,
+                0.0,
+            );
         }
     }
 }
