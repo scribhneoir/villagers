@@ -7,6 +7,9 @@
 - [x] Multiple chunks
 - [x] Chunk parent / block child
 - [x] Block surface spawining
+### Camera
+- [ ] Move camera with WASD
+- [ ] Camera zoom with +/-
 ### Villager movement / collision
 - [ ] Make villager sprite
 - [ ] Temp move villager with keyboard
