@@ -4,7 +4,7 @@ use noise::{NoiseFn, Perlin};
 
 const WORLD_SEED: u32 = 10;
 
-const RENDER_SCALE: f32 = 0.5;
+const RENDER_SCALE: f32 = 1.0;
 const BLOCK_TEXTURE_SIZE: f32 = 24.0;
 const CHUNK_SIZE: usize = 20; //blocks^3
 const SAMPLE_SCALE: f64 = 0.01;
@@ -291,10 +291,12 @@ fn spawn_block(
                 sprite: TextureAtlasSprite::new(sprite_index as usize),
                 transform: Transform::from_translation(Vec3::new(
                     (x * BLOCK_TEXTURE_SIZE * RENDER_SCALE / 2.0)
-                        - (y * BLOCK_TEXTURE_SIZE * RENDER_SCALE / 2.0),
+                        - (y * BLOCK_TEXTURE_SIZE * RENDER_SCALE / 2.0)
+                        - 1.0,
                     -(y * BLOCK_TEXTURE_SIZE * RENDER_SCALE / 4.0)
                         - (x * BLOCK_TEXTURE_SIZE * RENDER_SCALE / 4.0)
-                        + (z * BLOCK_TEXTURE_SIZE * RENDER_SCALE / (7.0 / 3.0)),
+                        + (z * BLOCK_TEXTURE_SIZE * RENDER_SCALE / (7.0 / 3.0))
+                        - 1.0,
                     x + y + z,
                 ))
                 .with_scale(Vec3::splat(RENDER_SCALE)),
