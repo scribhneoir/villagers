@@ -11,7 +11,7 @@
 - [x] Move camera with WASD
 - [x] Camera zoom with +/-
 ### Villager movement / collision
-- [ ] Make villager sprite
+- [x] Make villager sprite
 - [ ] Temp move villager with keyboard
 - [ ] Villager world collision
 - [ ] Villager gravity
