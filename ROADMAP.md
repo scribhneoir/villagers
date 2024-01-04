@@ -17,8 +17,8 @@
 - [ ] Villager gravity
 - [ ] Villager jumping
 ### Mouse tracking
-- [ ] Highlight block under cursor
 - [ ] Highlight villager under cursor
+- [ ] Highlight block under cursor
 - [ ] Villager move left click
 - [ ] Villager track right click
 ### Villager path finding
