@@ -6,10 +6,12 @@ use bevy::prelude::*;
 
 fn main() {
     App::new()
-        .add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest()))
-        .add_plugins(world::WorldPlugin)
-        .add_plugins(chunk::ChunkPlugin)
-        .add_plugins(mouse::MousePlugin)
+        .add_plugins((
+            DefaultPlugins.set(ImagePlugin::default_nearest()),
+            world::WorldPlugin,
+            chunk::ChunkPlugin,
+            mouse::MousePlugin,
+        ))
         .add_systems(Startup, startup)
         .add_systems(Update, move_camera)
         .run();
