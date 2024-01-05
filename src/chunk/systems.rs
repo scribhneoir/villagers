@@ -17,7 +17,7 @@ pub fn spawn_chunks(
         texture_handle,
         Vec2::splat(BLOCK_TEXTURE_SIZE),
         24,
-        24,
+        20,
         None,
         None,
     );
