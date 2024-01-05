@@ -15,7 +15,7 @@ pub fn spawn_chunks(
     let texture_handle = asset_server.load("blocks.png");
     let texture_atlas = TextureAtlas::from_grid(
         texture_handle,
-        Vec2::splat(BLOCK_TEXTURE_SIZE),
+        Vec2::new(BLOCK_TEXTURE_SIZE, BLOCK_TEXTURE_SIZE + 1.0),
         24,
         20,
         None,
