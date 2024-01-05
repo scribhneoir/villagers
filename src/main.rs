@@ -1,4 +1,5 @@
 mod chunk;
+mod mouse;
 mod world;
 
 use bevy::prelude::*;
@@ -8,13 +9,14 @@ fn main() {
         .add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest()))
         .add_plugins(world::WorldPlugin)
         .add_plugins(chunk::ChunkPlugin)
+        .add_plugins(mouse::MousePlugin)
         .add_systems(Startup, startup)
         .add_systems(Update, move_camera)
         .run();
 }
 
 #[derive(Component)]
-struct MainCamera;
+pub struct MainCamera;
 
 pub fn startup(mut commands: Commands) {
     //spawn 2d camera
