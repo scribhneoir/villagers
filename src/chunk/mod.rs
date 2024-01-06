@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-mod block;
+pub mod block;
 
 mod components;
 mod helpers;

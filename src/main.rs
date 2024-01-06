@@ -1,6 +1,8 @@
 mod chunk;
 mod fps;
 mod mouse;
+mod physics;
+mod villager;
 mod world;
 
 use bevy::prelude::*;
@@ -11,6 +13,7 @@ fn main() {
             DefaultPlugins.set(ImagePlugin::default_nearest()),
             world::WorldPlugin,
             chunk::ChunkPlugin,
+            villager::VillagerPlugin,
             mouse::MousePlugin,
             fps::FpsPlugin,
         ))

@@ -7,9 +7,10 @@ pub const SAND: usize = 4;
 pub const LOG: usize = 5;
 pub const LEAF: usize = 6;
 pub const WATER: usize = 24;
-pub const WATER_TOP: usize = 25;
+pub const WATER_TOP: usize = 24;
 
 pub const BLOCK_TEXTURE_SIZE: f32 = 24.0;
 
 #[derive(Component)]
+#[component(storage = "SparseSet")]
 pub struct Block;
