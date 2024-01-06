@@ -1,4 +1,5 @@
 mod chunk;
+mod fps;
 mod mouse;
 mod world;
 
@@ -11,6 +12,7 @@ fn main() {
             world::WorldPlugin,
             chunk::ChunkPlugin,
             mouse::MousePlugin,
+            fps::FpsPlugin,
         ))
         .add_systems(Startup, startup)
         .add_systems(Update, move_camera)
