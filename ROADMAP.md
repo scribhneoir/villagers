@@ -17,8 +17,11 @@
 - [ ] Villager gravity
 - [ ] Villager jumping
 ### Mouse tracking
-- [ ] Highlight villager under cursor
+- [x] Make block highlight sprite
 - [ ] Highlight block under cursor
+- [ ] Highlight specific block face under cursor
+- [ ] Make villager highlight sprite
+- [ ] Highlight villager under cursor
 - [ ] Villager move left click
 - [ ] Villager track right click
 ### Villager path finding
