@@ -46,3 +46,21 @@
 - [ ]  Title
 - [ ]  New world (set seed)
 - [ ]  Huds
+
+## Potential Features
+- [ ] World view rotation (Q & E)
+- [ ] Customizable Keymapping
+- [ ] Lighting [(see Isometric-Minecraft-CE)](https://github.com/Michael2-3B/Isometric-Minecraft-CE/blob/master/src/main.c#L993)
+- [ ] Mining
+- [ ] Better world gen
+- [ ] Fog of war
+- [ ] Water physics
+- [ ] Farming
+- [ ] Passive mobs
+- [ ] Hostile mobs
+- [ ] Crafting
+- [ ] Villager professions
+- [ ] Villager discoveries?
+- [ ] Villager needs?
+- [ ] Animations
+- [ ] Alternate villager apearances
