@@ -1,7 +1,8 @@
 # Villagers
-### Author: Josiah McCracken (scribhneoir21@gmail.com)
 
-A minecraft inspired isometric management sim
+A minecraft inspired isometric management sim.
+
+Proudly built with [Bevy](https://bevyengine.org/)
 
 ## Dev Requirements
 
