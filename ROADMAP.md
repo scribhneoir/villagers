@@ -12,7 +12,7 @@
 - [x] Camera zoom with +/-
 ### Villager movement / collision
 - [x] Make villager sprite
-- [ ] Temp move villager with keyboard
+- [x] Temp move villager with keyboard
 - [ ] Villager world collision
 - [ ] Villager gravity
 - [ ] Villager jumping
