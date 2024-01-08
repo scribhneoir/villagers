@@ -7,6 +7,7 @@ const VILLAGER_TEXTURE_W: f32 = 15.0;
 const VILLAGER_TEXTURE_H: f32 = 20.0;
 const VILLAGER_X_OFFSET: f32 = 0.0;
 const VILLAGER_Y_OFFSET: f32 = 13.0;
+const VILLAGER_SPEED: f32 = 2.0;
 const INITIAL_VILLAGER_COUNT: usize = 1;
 pub struct VillagerPlugin;
 impl Plugin for VillagerPlugin {
@@ -38,7 +39,11 @@ fn spawn_villagers(
     for _ in 0..INITIAL_VILLAGER_COUNT {
         commands.spawn((
             Villager,
-            Position { x: 4, y: 4, z: 4 },
+            Position {
+                x: 4.0,
+                y: 4.0,
+                z: 4.0,
+            },
             SpriteSheetBundle {
                 texture_atlas: texture_atlas_handle.clone(),
                 sprite: TextureAtlasSprite::new(1),
@@ -51,6 +56,7 @@ fn spawn_villagers(
 
 fn move_villager(
     input: Res<Input<KeyCode>>,
+    time: Res<Time>,
     mut villager_position_query: Query<&mut Position, With<Villager>>,
     mut villager_transform_query: Query<&mut Transform, With<Villager>>,
     mut villager_sprite_query: Query<&mut TextureAtlasSprite, With<Villager>>,
@@ -62,42 +68,43 @@ fn move_villager(
     let mut change = false;
     //move camera using wasd
     if input.pressed(KeyCode::Up) {
-        position.y -= 1;
+        position.y -= VILLAGER_SPEED * time.delta_seconds();
         sprite.index = 0;
         change = true;
     }
     if input.pressed(KeyCode::Down) {
-        position.y += 1;
+        position.y += VILLAGER_SPEED * time.delta_seconds();
         sprite.index = 2;
         change = true;
     }
     if input.pressed(KeyCode::Left) {
-        position.x -= 1;
+        position.x -= VILLAGER_SPEED * time.delta_seconds();
         sprite.index = 3;
         change = true;
     }
     if input.pressed(KeyCode::Right) {
-        position.x += 1;
+        position.x += VILLAGER_SPEED * time.delta_seconds();
         sprite.index = 1;
         change = true;
     }
     if input.pressed(KeyCode::Space) {
-        position.z += 1;
+        position.z += VILLAGER_SPEED * time.delta_seconds();
         change = true;
     }
     if input.pressed(KeyCode::ShiftLeft) {
-        position.z -= 1;
+        position.z -= VILLAGER_SPEED * time.delta_seconds();
         change = true;
     }
 
     if change {
-        transform.translation.x = (position.x as f32 * BLOCK_TEXTURE_SIZE / 2.0)
-            - (position.y as f32 * BLOCK_TEXTURE_SIZE / 2.0)
+        transform.translation.x = (position.x.round() * BLOCK_TEXTURE_SIZE / 2.0)
+            - (position.y.round() * BLOCK_TEXTURE_SIZE / 2.0)
             + VILLAGER_X_OFFSET;
-        transform.translation.y = -(position.y as f32 * BLOCK_TEXTURE_SIZE / 4.0)
-            - (position.x as f32 * BLOCK_TEXTURE_SIZE / 4.0)
-            + (position.z as f32 * BLOCK_TEXTURE_SIZE / 2.0)
+        transform.translation.y = -(position.y.round() * BLOCK_TEXTURE_SIZE / 4.0)
+            - (position.x.round() * BLOCK_TEXTURE_SIZE / 4.0)
+            + (position.z.round() * BLOCK_TEXTURE_SIZE / 2.0)
             + VILLAGER_Y_OFFSET;
-        transform.translation.z = (position.x + position.y + position.z + 1) as f32;
+        transform.translation.z =
+            position.x.round() + position.y.round() + position.z.round() + 1.0;
     }
 }
