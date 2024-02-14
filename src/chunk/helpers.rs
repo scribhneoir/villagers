@@ -34,18 +34,23 @@ pub fn check_surroundings(
     } else {
         CHUNK_SIZE
     };
-    for i in x_min..x_max {
-        for j in y_min..y_max {
-            for k in z_min..z_max {
-                if i > 0 && j > 0 && k > 0 && i < CHUNK_SIZE && j < CHUNK_SIZE && k < CHUNK_SIZE {
-                    if chunk[i][j][k] == LOG || chunk[i][j][k] == LEAF {
-                        return false;
-                    }
+    for (i, _) in chunk.iter().enumerate().take(x_max).skip(x_min) {
+        for (j, _) in chunk.iter().enumerate().take(y_max).skip(y_min) {
+            for (k, _) in chunk.iter().enumerate().take(z_max).skip(z_min) {
+                if i > 0
+                    && j > 0
+                    && k > 0
+                    && i < CHUNK_SIZE
+                    && j < CHUNK_SIZE
+                    && k < CHUNK_SIZE
+                    && (chunk[i][j][k] == LOG || chunk[i][j][k] == LEAF)
+                {
+                    return false;
                 }
             }
         }
     }
-    return true;
+    true
 }
 
 pub fn find_top_block(
@@ -60,7 +65,7 @@ pub fn find_top_block(
             return (chunk[x - i][y - i][z - i], x - i, y - i, z - i);
         }
     }
-    return (0, 0, 0, 0);
+    (0, 0, 0, 0)
 }
 
 pub fn generate_chunk(
@@ -153,12 +158,10 @@ pub fn generate_chunk(
                     } else {
                         CHUNK_SIZE
                     };
-                    for i in x_min..x_max {
-                        for j in y_min..y_max {
-                            for k in z_min..z_max {
-                                {
-                                    chunk[i][j][k] = LEAF;
-                                }
+                    for chunk_x in chunk[x_min..x_max].iter_mut() {
+                        for chunk_y in chunk_x[y_min..y_max].iter_mut() {
+                            for element in chunk_y[z_min..z_max].iter_mut() {
+                                *element = LEAF;
                             }
                         }
                     }
@@ -175,7 +178,7 @@ pub fn generate_chunk(
     }
 
     //spawn chunk entity
-    return chunk;
+    chunk
 }
 
 fn spawn_block(
@@ -219,7 +222,7 @@ pub fn spawn_visable_blocks(
 ) {
     for i in 0..CHUNK_SIZE {
         for j in 0..CHUNK_SIZE {
-            let mut top_block_id = find_top_block(&chunk, i, j, CHUNK_SIZE - 1);
+            let mut top_block_id = find_top_block(chunk, i, j, CHUNK_SIZE - 1);
             if top_block_id.0 > 0 {
                 let block_ent = spawn_block(
                     commands,
@@ -231,7 +234,7 @@ pub fn spawn_visable_blocks(
                 );
                 commands.entity(chunk_ent).push_children(&[block_ent]);
             }
-            top_block_id = find_top_block(&chunk, i, CHUNK_SIZE - 1, j);
+            top_block_id = find_top_block(chunk, i, CHUNK_SIZE - 1, j);
             if top_block_id.0 > 0 {
                 let block_ent = spawn_block(
                     commands,
@@ -243,7 +246,7 @@ pub fn spawn_visable_blocks(
                 );
                 commands.entity(chunk_ent).push_children(&[block_ent]);
             }
-            top_block_id = find_top_block(&chunk, CHUNK_SIZE - 1, i, j);
+            top_block_id = find_top_block(chunk, CHUNK_SIZE - 1, i, j);
             if top_block_id.0 > 0 {
                 let block_ent = spawn_block(
                     commands,

@@ -1,11 +1,11 @@
 use bevy::prelude::*;
 
-pub struct PhysicsPlugin;
-impl Plugin for PhysicsPlugin {
-    fn build(&self, app: &mut App) {
-        // app.add_systems(Update, apply_gravity);
-    }
-}
+// pub struct PhysicsPlugin;
+// impl Plugin for PhysicsPlugin {
+//     fn build(&self, app: &mut App) {
+//         // app.add_systems(Update, apply_gravity);
+//     }
+// }
 
 #[derive(Component)]
 pub struct Velocity {

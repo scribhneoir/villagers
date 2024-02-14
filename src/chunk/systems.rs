@@ -1,5 +1,6 @@
 use super::components::*;
 use super::helpers::*;
+use crate::physics::Position;
 use crate::world::resources::World;
 use bevy::prelude::*;
 
@@ -33,7 +34,15 @@ pub fn spawn_chunks(
             let chunk = generate_chunk(&perlin, x_off as f64, y_off as f64);
 
             let chunk_ent = commands
-                .spawn((Chunk { blocks: chunk }, SpatialBundle::default()))
+                .spawn((
+                    Chunk { blocks: chunk },
+                    Position {
+                        x: x_off,
+                        y: y_off,
+                        z: 0.0,
+                    },
+                    SpatialBundle::default(),
+                ))
                 .id();
 
             spawn_visable_blocks(

@@ -67,3 +67,4 @@
 - [ ] Villager needs?
 - [ ] Animations
 - [ ] Alternate villager apearances
+- [ ] Karma system

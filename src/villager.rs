@@ -13,12 +13,14 @@ pub struct VillagerPlugin;
 impl Plugin for VillagerPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, spawn_villagers)
-            .add_systems(Update, (move_villager));
+            .add_systems(Update, move_villager);
     }
 }
 
 #[derive(Component)]
-pub struct Villager;
+pub struct Villager {
+    pub selected: bool,
+}
 
 fn spawn_villagers(
     mut commands: Commands,
@@ -38,11 +40,11 @@ fn spawn_villagers(
 
     for _ in 0..INITIAL_VILLAGER_COUNT {
         commands.spawn((
-            Villager,
+            Villager { selected: false },
             Position {
-                x: 4.0,
-                y: 4.0,
-                z: 4.0,
+                x: 5.0,
+                y: 5.0,
+                z: 5.0,
             },
             SpriteSheetBundle {
                 texture_atlas: texture_atlas_handle.clone(),
