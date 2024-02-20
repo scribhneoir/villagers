@@ -97,7 +97,7 @@ fn fps_text_update_system(
         // try to get a "smoothed" FPS value from Bevy
         if let Some(value) = diagnostics
             .get(FrameTimeDiagnosticsPlugin::FPS)
-            .and_then(|fps| fps.smoothed())
+            .and_then(bevy::diagnostic::Diagnostic::smoothed)
         {
             // Format the number as to leave space for 4 digits, just in case,
             // right-aligned and rounded. This helps readability when the

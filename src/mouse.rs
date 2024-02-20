@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 
-use super::MainCamera;
+use crate::camera::MainCamera;
 
 #[derive(Resource, Default, Debug)]
 pub struct MouseState {

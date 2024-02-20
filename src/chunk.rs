@@ -1,16 +1,112 @@
-use super::components::*;
-use crate::chunk::block::components::*;
+use crate::world::{Position, World, WORLD_SIZE};
 use bevy::prelude::*;
 use noise::{NoiseFn, Perlin};
 
+//Const
+pub const CHUNK_SIZE: usize = 20; //blocks^3
+pub const BLOCK_TEXTURE_SIZE: f32 = 24.0;
 const RENDER_SCALE: f32 = 1.0;
-
 pub const SAMPLE_SCALE: f64 = 0.01;
 pub const WATER_LEVEL: usize = 4;
 pub const TREE_HEIGHT: usize = 5;
 
+//Types
+#[repr(usize)]
+#[derive(PartialEq, Eq, Copy, Clone)]
+pub enum Block {
+    Air = 0,
+    Dirt = 1,
+    Grass = 2,
+    Stone = 3,
+    Sand = 4,
+    Log = 5,
+    Leaf = 6,
+    Water = 24,
+    WaterTop = 25,
+}
+
+//Plugin
+pub struct ChunkPlugin;
+
+impl Plugin for ChunkPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(Startup, spawn_chunks);
+    }
+}
+
+//Components
+#[derive(Component, Clone)]
+pub struct Chunk {
+    pub blocks: [[[Block; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_SIZE],
+}
+
+impl Default for Chunk {
+    fn default() -> Self {
+        Self {
+            blocks: [[[Block::Air; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_SIZE],
+        }
+    }
+}
+
+#[derive(Component)]
+#[component(storage = "SparseSet")]
+pub struct RenderedBlock;
+
+//Systems
+pub fn spawn_chunks(
+    mut commands: Commands,
+    world: Res<World>,
+    asset_server: Res<AssetServer>,
+    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+) {
+    //add block texture to texture_atlases resource
+    let texture_handle = asset_server.load("blocks.png");
+    let texture_atlas = TextureAtlas::from_grid(
+        texture_handle,
+        Vec2::new(BLOCK_TEXTURE_SIZE, BLOCK_TEXTURE_SIZE + 1.0),
+        24,
+        20,
+        None,
+        None,
+    );
+    let texture_atlas_handle = texture_atlases.add(texture_atlas);
+
+    let perlin = world.perlin;
+    //generate chunks
+    for x in 0..WORLD_SIZE {
+        for y in 0..WORLD_SIZE {
+            let x_off = x as f32 * (CHUNK_SIZE as f32 - 1.0);
+            let y_off = y as f32 * (CHUNK_SIZE as f32 - 1.0);
+
+            let chunk = generate_chunk(&perlin, f64::from(x_off), f64::from(y_off));
+
+            let chunk_ent = commands
+                .spawn((
+                    Chunk { blocks: chunk },
+                    Position {
+                        x: x_off,
+                        y: y_off,
+                        z: 0.0,
+                    },
+                    SpatialBundle::default(),
+                ))
+                .id();
+
+            spawn_visable_blocks(
+                &mut commands,
+                texture_atlas_handle.clone(),
+                &chunk,
+                chunk_ent,
+                x_off,
+                y_off,
+                0.0,
+            );
+        }
+    }
+}
+
 pub fn check_surroundings(
-    chunk: &[[[usize; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_SIZE],
+    chunk: &[[[Block; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_SIZE],
     x: usize,
     y: usize,
     z: usize,
@@ -43,7 +139,7 @@ pub fn check_surroundings(
                     && i < CHUNK_SIZE
                     && j < CHUNK_SIZE
                     && k < CHUNK_SIZE
-                    && (chunk[i][j][k] == LOG || chunk[i][j][k] == LEAF)
+                    && (chunk[i][j][k] == Block::Log || chunk[i][j][k] == Block::Leaf)
                 {
                     return false;
                 }
@@ -54,55 +150,53 @@ pub fn check_surroundings(
 }
 
 pub fn find_top_block(
-    chunk: &[[[usize; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_SIZE],
+    chunk: &[[[Block; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_SIZE],
     x: usize,
     y: usize,
     z: usize,
-) -> (usize, usize, usize, usize) {
+) -> (Block, usize, usize, usize) {
     let min_coor = x.min(y).min(z);
     for i in 0..min_coor {
-        if chunk[x - i][y - i][z - i] != 0 {
+        if chunk[x - i][y - i][z - i] != Block::Air {
             return (chunk[x - i][y - i][z - i], x - i, y - i, z - i);
         }
     }
-    (0, 0, 0, 0)
+    (Block::Air, 0, 0, 0)
 }
 
 pub fn generate_chunk(
     perlin: &Perlin,
     x_off: f64,
     y_off: f64,
-) -> [[[usize; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_SIZE] {
-    let mut chunk: [[[usize; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_SIZE] =
-        [[[0; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_SIZE];
+) -> [[[Block; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_SIZE] {
+    let mut chunk = Chunk::default().blocks;
 
     for x in 0..CHUNK_SIZE {
         for y in 0..CHUNK_SIZE {
-            let stone_h = ((perlin.get([
+            let stone_h = (perlin.get([
                 (x as f64 + x_off) * SAMPLE_SCALE,
                 (y as f64 + y_off) * SAMPLE_SCALE,
                 0.0,
             ]) * (CHUNK_SIZE as f64))
-                * 1.2
-                + 1.0) as usize;
-            let dirt_h = ((stone_h as f64
-                + (perlin.get([
+                .mul_add(1.2, 1.0) as usize;
+            let dirt_h = perlin
+                .get([
                     (x as f64 + x_off) * SAMPLE_SCALE,
                     (y as f64 + y_off) * SAMPLE_SCALE,
                     2.0,
-                ]) * 5.0))
-                * 1.2
-                + 1.0) as usize;
+                ])
+                .mul_add(5.0, stone_h as f64)
+                .mul_add(1.2, 1.0) as usize;
 
             for z in 0..stone_h {
-                chunk[x][y][z] = STONE;
+                chunk[x][y][z] = Block::Stone;
             }
 
             for z in stone_h..dirt_h {
-                chunk[x][y][z] = DIRT;
+                chunk[x][y][z] = Block::Dirt;
             }
             if dirt_h > WATER_LEVEL + 1 {
-                chunk[x][y][dirt_h] = GRASS;
+                chunk[x][y][dirt_h] = Block::Grass;
                 //spawn trees
                 if x > 2
                     && y > 2
@@ -118,20 +212,19 @@ pub fn generate_chunk(
                         x,
                         y,
                         dirt_h + 5,
-                        (perlin
+                        perlin
                             .get([
                                 (x as f64 + x_off) * SAMPLE_SCALE,
                                 (y as f64 + y_off) * SAMPLE_SCALE,
                                 4.0,
                             ])
                             .abs()
-                            * 5.0
-                            + 3.0) as usize,
+                            .mul_add(5.0, 3.0) as usize,
                     )
                 {
                     //spawn trunk
                     for z in dirt_h..dirt_h + TREE_HEIGHT {
-                        chunk[x][y][z] = LOG;
+                        chunk[x][y][z] = Block::Log;
                     }
 
                     //spawn leaves
@@ -158,21 +251,21 @@ pub fn generate_chunk(
                     } else {
                         CHUNK_SIZE
                     };
-                    for chunk_x in chunk[x_min..x_max].iter_mut() {
-                        for chunk_y in chunk_x[y_min..y_max].iter_mut() {
-                            for element in chunk_y[z_min..z_max].iter_mut() {
-                                *element = LEAF;
+                    for chunk_x in &mut chunk[x_min..x_max] {
+                        for chunk_y in &mut chunk_x[y_min..y_max] {
+                            for element in &mut chunk_y[z_min..z_max] {
+                                *element = Block::Leaf;
                             }
                         }
                     }
                 }
             } else if dirt_h == WATER_LEVEL || dirt_h == WATER_LEVEL + 1 {
-                chunk[x][y][dirt_h] = SAND;
+                chunk[x][y][dirt_h] = Block::Sand;
             } else {
                 for z in dirt_h..WATER_LEVEL {
-                    chunk[x][y][z] = WATER;
+                    chunk[x][y][z] = Block::Water;
                 }
-                chunk[x][y][WATER_LEVEL] = WATER_TOP;
+                chunk[x][y][WATER_LEVEL] = Block::WaterTop;
             }
         }
     }
@@ -184,18 +277,18 @@ pub fn generate_chunk(
 fn spawn_block(
     commands: &mut Commands,
     texture_atlas_handle: Handle<TextureAtlas>,
-    sprite_index: usize,
+    sprite_index: Block,
     x: f32,
     y: f32,
     z: f32,
 ) -> Entity {
     return commands
         .spawn((
-            Block,
+            RenderedBlock,
             // ChunkPosition { x, y, z },
             SpriteSheetBundle {
                 texture_atlas: texture_atlas_handle,
-                sprite: TextureAtlasSprite::new(sprite_index),
+                sprite: TextureAtlasSprite::new(sprite_index as usize),
                 transform: Transform::from_translation(Vec3::new(
                     (x * BLOCK_TEXTURE_SIZE * RENDER_SCALE / 2.0)
                         - (y * BLOCK_TEXTURE_SIZE * RENDER_SCALE / 2.0),
@@ -214,7 +307,7 @@ fn spawn_block(
 pub fn spawn_visable_blocks(
     commands: &mut Commands,
     texture_atlas_handle: Handle<TextureAtlas>,
-    chunk: &[[[usize; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_SIZE],
+    chunk: &[[[Block; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_SIZE],
     chunk_ent: Entity,
     x_off: f32,
     y_off: f32,
@@ -223,7 +316,7 @@ pub fn spawn_visable_blocks(
     for i in 0..CHUNK_SIZE {
         for j in 0..CHUNK_SIZE {
             let mut top_block_id = find_top_block(chunk, i, j, CHUNK_SIZE - 1);
-            if top_block_id.0 > 0 {
+            if top_block_id.0 != Block::Air {
                 let block_ent = spawn_block(
                     commands,
                     texture_atlas_handle.clone(),
@@ -235,7 +328,7 @@ pub fn spawn_visable_blocks(
                 commands.entity(chunk_ent).push_children(&[block_ent]);
             }
             top_block_id = find_top_block(chunk, i, CHUNK_SIZE - 1, j);
-            if top_block_id.0 > 0 {
+            if top_block_id.0 != Block::Air {
                 let block_ent = spawn_block(
                     commands,
                     texture_atlas_handle.clone(),
@@ -247,7 +340,7 @@ pub fn spawn_visable_blocks(
                 commands.entity(chunk_ent).push_children(&[block_ent]);
             }
             top_block_id = find_top_block(chunk, CHUNK_SIZE - 1, i, j);
-            if top_block_id.0 > 0 {
+            if top_block_id.0 != Block::Air {
                 let block_ent = spawn_block(
                     commands,
                     texture_atlas_handle.clone(),

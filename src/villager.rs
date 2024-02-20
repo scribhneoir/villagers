@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
-use crate::chunk::block::components::*;
-use crate::physics::*;
+use crate::chunk::BLOCK_TEXTURE_SIZE;
+use crate::physics::Position;
 
 const VILLAGER_TEXTURE_W: f32 = 15.0;
 const VILLAGER_TEXTURE_H: f32 = 20.0;
@@ -9,6 +9,7 @@ const VILLAGER_X_OFFSET: f32 = 0.0;
 const VILLAGER_Y_OFFSET: f32 = 13.0;
 const VILLAGER_SPEED: f32 = 2.0;
 const INITIAL_VILLAGER_COUNT: usize = 1;
+
 pub struct VillagerPlugin;
 impl Plugin for VillagerPlugin {
     fn build(&self, app: &mut App) {
