@@ -396,6 +396,7 @@ pub fn path_to(
             ((p.x as isize - end.x as isize).abs()
                 + (p.y as isize - end.y as isize).abs()
                 + (p.z as isize - end.z as isize).abs()) as usize
+                / 9
         },
         |p| check_success(p, end),
     );
