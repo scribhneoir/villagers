@@ -57,19 +57,18 @@ pub fn spawn_chunks(
     mut commands: Commands,
     world: Res<World>,
     asset_server: Res<AssetServer>,
-    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+    mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
 ) {
     //add block texture to texture_atlases resource
-    let texture_handle = asset_server.load("blocks.png");
-    let texture_atlas = TextureAtlas::from_grid(
-        texture_handle,
+    let block_texture_handle = asset_server.load("blocks.png");
+    let texture_atlas = TextureAtlasLayout::from_grid(
         Vec2::new(BLOCK_TEXTURE_SIZE, BLOCK_TEXTURE_SIZE + 1.0),
         24,
         20,
         None,
         None,
     );
-    let texture_atlas_handle = texture_atlases.add(texture_atlas);
+    let block_layout_handle = texture_atlases.add(texture_atlas);
 
     let perlin = world.perlin;
     //generate chunks
@@ -94,7 +93,8 @@ pub fn spawn_chunks(
 
             spawn_visable_blocks(
                 &mut commands,
-                texture_atlas_handle.clone(),
+                block_layout_handle.clone(),
+                block_texture_handle.clone(),
                 &chunk,
                 chunk_ent,
                 x_off,
@@ -276,7 +276,8 @@ pub fn generate_chunk(
 
 fn spawn_block(
     commands: &mut Commands,
-    texture_atlas_handle: Handle<TextureAtlas>,
+    block_layout_handle: Handle<TextureAtlasLayout>,
+    block_texture_handle: Handle<Image>,
     sprite_index: Block,
     x: f32,
     y: f32,
@@ -287,8 +288,12 @@ fn spawn_block(
             RenderedBlock,
             // ChunkPosition { x, y, z },
             SpriteSheetBundle {
-                texture_atlas: texture_atlas_handle,
-                sprite: TextureAtlasSprite::new(sprite_index as usize),
+                atlas: TextureAtlas {
+                    layout: block_layout_handle,
+                    index: sprite_index as usize,
+                },
+                sprite: Sprite::default(),
+                texture: block_texture_handle,
                 transform: Transform::from_translation(Vec3::new(
                     (x * BLOCK_TEXTURE_SIZE * RENDER_SCALE / 2.0)
                         - (y * BLOCK_TEXTURE_SIZE * RENDER_SCALE / 2.0),
@@ -306,7 +311,8 @@ fn spawn_block(
 
 pub fn spawn_visable_blocks(
     commands: &mut Commands,
-    texture_atlas_handle: Handle<TextureAtlas>,
+    block_layout_handle: Handle<TextureAtlasLayout>,
+    block_texture_handle: Handle<Image>,
     chunk: &[[[Block; CHUNK_SIZE]; CHUNK_SIZE]; CHUNK_SIZE],
     chunk_ent: Entity,
     x_off: f32,
@@ -319,7 +325,8 @@ pub fn spawn_visable_blocks(
             if top_block_id.0 != Block::Air {
                 let block_ent = spawn_block(
                     commands,
-                    texture_atlas_handle.clone(),
+                    block_layout_handle.clone(),
+                    block_texture_handle.clone(),
                     top_block_id.0,
                     top_block_id.1 as f32 + x_off,
                     top_block_id.2 as f32 + y_off,
@@ -331,7 +338,8 @@ pub fn spawn_visable_blocks(
             if top_block_id.0 != Block::Air {
                 let block_ent = spawn_block(
                     commands,
-                    texture_atlas_handle.clone(),
+                    block_layout_handle.clone(),
+                    block_texture_handle.clone(),
                     top_block_id.0,
                     top_block_id.1 as f32 + x_off,
                     top_block_id.2 as f32 + y_off,
@@ -343,7 +351,8 @@ pub fn spawn_visable_blocks(
             if top_block_id.0 != Block::Air {
                 let block_ent = spawn_block(
                     commands,
-                    texture_atlas_handle.clone(),
+                    block_layout_handle.clone(),
+                    block_texture_handle.clone(),
                     top_block_id.0,
                     top_block_id.1 as f32 + x_off,
                     top_block_id.2 as f32 + y_off,

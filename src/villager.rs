@@ -26,11 +26,10 @@ pub struct Villager {
 fn spawn_villagers(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    mut texture_atlases: ResMut<Assets<TextureAtlas>>,
+    mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
 ) {
     let texture_handle = asset_server.load("villager.png");
-    let texture_atlas = TextureAtlas::from_grid(
-        texture_handle,
+    let texture_atlas = TextureAtlasLayout::from_grid(
         Vec2::new(VILLAGER_TEXTURE_W, VILLAGER_TEXTURE_H),
         24,
         20,
@@ -48,8 +47,12 @@ fn spawn_villagers(
                 z: 5.0,
             },
             SpriteSheetBundle {
-                texture_atlas: texture_atlas_handle.clone(),
-                sprite: TextureAtlasSprite::new(1),
+                atlas: TextureAtlas {
+                    layout: texture_atlas_handle.clone(),
+                    index: 1,
+                },
+                sprite: Sprite::default(),
+                texture: texture_handle.clone(),
                 transform: Transform::from_translation(Vec3::new(0.0, 0.0, 0.0)),
                 ..Default::default()
             },
@@ -58,11 +61,11 @@ fn spawn_villagers(
 }
 
 fn move_villager(
-    input: Res<Input<KeyCode>>,
+    input: Res<ButtonInput<KeyCode>>,
     time: Res<Time>,
     mut villager_position_query: Query<&mut Position, With<Villager>>,
     mut villager_transform_query: Query<&mut Transform, With<Villager>>,
-    mut villager_sprite_query: Query<&mut TextureAtlasSprite, With<Villager>>,
+    mut villager_sprite_query: Query<&mut TextureAtlas, With<Villager>>,
 ) {
     let mut transform = villager_transform_query.single_mut();
     let mut position = villager_position_query.single_mut();
@@ -70,22 +73,22 @@ fn move_villager(
 
     let mut change = false;
     //move camera using wasd
-    if input.pressed(KeyCode::Up) {
+    if input.pressed(KeyCode::ArrowUp) {
         position.y -= VILLAGER_SPEED * time.delta_seconds();
         sprite.index = 0;
         change = true;
     }
-    if input.pressed(KeyCode::Down) {
+    if input.pressed(KeyCode::ArrowDown) {
         position.y += VILLAGER_SPEED * time.delta_seconds();
         sprite.index = 2;
         change = true;
     }
-    if input.pressed(KeyCode::Left) {
+    if input.pressed(KeyCode::ArrowLeft) {
         position.x -= VILLAGER_SPEED * time.delta_seconds();
         sprite.index = 3;
         change = true;
     }
-    if input.pressed(KeyCode::Right) {
+    if input.pressed(KeyCode::ArrowRight) {
         position.x += VILLAGER_SPEED * time.delta_seconds();
         sprite.index = 1;
         change = true;

@@ -300,7 +300,7 @@ pub fn find_neighbors(
 
 pub fn find_chunks_for_neighbors<'a>(
     location: &'a GridPosition,
-    chunks: &'a Vec<(Chunk, GridPosition)>,
+    chunks: &'a &[(Chunk, GridPosition)],
 ) -> ((&'a Chunk, &'a GridPosition), NeighborChunks<'a>) {
     let mut chunk = None;
     let mut neighbor_chunks = NeighborChunks {
@@ -309,7 +309,7 @@ pub fn find_chunks_for_neighbors<'a>(
         east: None,
         west: None,
     };
-    for (c, pos) in chunks {
+    for (c, pos) in chunks.iter() {
         if pos.x <= location.x
             && pos.x + CHUNK_SIZE > location.x
             && pos.y <= location.y
@@ -343,9 +343,9 @@ pub fn find_chunks_for_neighbors<'a>(
 
 pub fn successors(
     position: &GridPosition,
-    chunks: &Vec<(Chunk, GridPosition)>,
+    chunks: &[(Chunk, GridPosition)],
 ) -> Vec<(GridPosition, usize)> {
-    let (chunk, neighbor_chunks) = find_chunks_for_neighbors(position, chunks);
+    let (chunk, neighbor_chunks) = find_chunks_for_neighbors(position, &chunks);
     find_neighbors(chunk, neighbor_chunks, position)
         .iter()
         .map(|neighbor| (neighbor.clone(), 1))
@@ -385,7 +385,7 @@ const fn check_success(position: &GridPosition, end: &GridPosition) -> bool {
 }
 
 pub fn path_to(
-    chunks: &Vec<(Chunk, GridPosition)>,
+    chunks: &[(Chunk, GridPosition)],
     start: &GridPosition,
     end: &GridPosition,
 ) -> Result<Path, PathfindingError> {
@@ -429,7 +429,7 @@ mod tests {
                 chunk.blocks[x][y][0] = Block::Dirt;
             }
         }
-        let chunks = vec![(chunk, GridPosition::new(0, 0, 0))];
+        let chunks = vec![(chunk, GridPosition::new(0, 0, 0))].into_boxed_slice();
 
         let result = path_to(&chunks, &start, &goal);
         println!("{:?}", result);
@@ -446,7 +446,7 @@ mod tests {
                 chunk.blocks[x][y][0] = Block::Dirt;
             }
         }
-        let chunks = vec![
+        let chunks = Box::new(vec![
             (chunk.clone(), GridPosition::new(0, 0, 0)),
             (chunk.clone(), GridPosition::new(3, 0, 0)),
             (chunk.clone(), GridPosition::new(6, 0, 0)),
@@ -455,8 +455,8 @@ mod tests {
             (chunk.clone(), GridPosition::new(6, 3, 0)),
             (chunk.clone(), GridPosition::new(0, 6, 0)),
             (chunk.clone(), GridPosition::new(3, 6, 0)),
-            (chunk.clone(), GridPosition::new(6, 6, 0)),
-        ];
+            (chunk, GridPosition::new(6, 6, 0)),
+        ]);
 
         let result = path_to(&chunks, &start, &goal);
         println!("{:?}", result);

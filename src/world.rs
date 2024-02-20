@@ -40,13 +40,13 @@ pub struct GridPosition {
 }
 
 impl GridPosition {
-    pub fn new(x: usize, y: usize, z: usize) -> Self {
+    pub const fn new(x: usize, y: usize, z: usize) -> Self {
         Self { x, y, z }
     }
 }
 
 impl Position {
-    pub fn new(x: f32, y: f32, z: f32) -> Self {
+    pub const fn new(x: f32, y: f32, z: f32) -> Self {
         Self { x, y, z }
     }
     pub fn to_grid(&self) -> GridPosition {

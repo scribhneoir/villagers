@@ -20,7 +20,7 @@ impl Plugin for MousePlugin {
 
 fn update_mouse_state(
     mut mouse_state: ResMut<MouseState>,
-    mouse_buttons: Res<Input<MouseButton>>,
+    mouse_buttons: Res<ButtonInput<MouseButton>>,
     q_window: Query<&Window, With<PrimaryWindow>>,
     q_camera: Query<(&Camera, &GlobalTransform), With<MainCamera>>,
 ) {

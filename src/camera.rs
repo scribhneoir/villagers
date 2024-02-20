@@ -18,7 +18,7 @@ pub fn startup(mut commands: Commands) {
 }
 
 fn move_camera(
-    input: Res<Input<KeyCode>>,
+    input: Res<ButtonInput<KeyCode>>,
     mut camera_projection_query: Query<&mut OrthographicProjection, With<MainCamera>>,
     mut camera_transform_query: Query<&mut Transform, With<Camera>>,
 ) {
@@ -28,20 +28,20 @@ fn move_camera(
     if input.pressed(KeyCode::Minus) {
         projection.scale += 0.05;
     }
-    if input.pressed(KeyCode::Equals) {
+    if input.pressed(KeyCode::Equal) {
         projection.scale -= 0.05;
     }
     //move camera using wasd
-    if input.pressed(KeyCode::W) {
+    if input.pressed(KeyCode::KeyW) {
         transform.translation.y += 1.0 * projection.scale;
     }
-    if input.pressed(KeyCode::S) {
+    if input.pressed(KeyCode::KeyS) {
         transform.translation.y -= 1.0 * projection.scale;
     }
-    if input.pressed(KeyCode::A) {
+    if input.pressed(KeyCode::KeyA) {
         transform.translation.x -= 1.0 * projection.scale;
     }
-    if input.pressed(KeyCode::D) {
+    if input.pressed(KeyCode::KeyD) {
         transform.translation.x += 1.0 * projection.scale;
     }
 
