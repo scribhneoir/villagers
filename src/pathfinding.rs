@@ -388,7 +388,7 @@ pub fn path_to(
     chunks: &Vec<(Chunk, GridPosition)>,
     start: &GridPosition,
     end: &GridPosition,
-) -> Result<Path, String> {
+) -> Result<Path, PathfindingError> {
     let result = astar(
         start,
         |p| successors(p, chunks),
@@ -403,7 +403,7 @@ pub fn path_to(
     if let Some((path, _cost)) = result {
         Ok(Path { locations: path })
     } else {
-        Err("No path found".to_string())
+        Err(PathfindingError)
     }
 }
 
