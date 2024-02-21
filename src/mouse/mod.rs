@@ -4,7 +4,7 @@ mod systems;
 mod resources;
 
 use systems::*;
-use resources::*;
+pub use resources::*;
 
 pub struct MousePlugin;
 impl Plugin for MousePlugin {
