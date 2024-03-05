@@ -18,7 +18,7 @@
 - [ ] Villager jumping
 ### Mouse tracking
 - [x] Make block highlight sprite
-- [ ] Highlight block under cursor
+- [x] Highlight block under cursor
 - [ ] Highlight specific block face under cursor
 - [ ] Make villager highlight sprite
 - [ ] Highlight villager under cursor
