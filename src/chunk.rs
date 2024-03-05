@@ -1,6 +1,10 @@
+use crate::mouse::MouseState;
 use crate::world::{Position, World, WORLD_SIZE};
 use bevy::prelude::*;
 use noise::{NoiseFn, Perlin};
+
+mod cursor;
+use cursor::components::*;
 
 //Const
 pub const CHUNK_SIZE: usize = 20; //blocks^3
@@ -30,7 +34,8 @@ pub struct ChunkPlugin;
 
 impl Plugin for ChunkPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, spawn_chunks);
+        app.add_systems(Startup, (spawn_chunks, spawn_cursor))
+            .add_systems(Update, move_cursor);
     }
 }
 
@@ -362,4 +367,47 @@ pub fn spawn_visable_blocks(
             }
         }
     }
+}
+
+pub fn spawn_cursor(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut texture_atlases: ResMut<Assets<TextureAtlasLayout>>,
+) {
+    let texture_handle = asset_server.load("cursor.png");
+    let layout = TextureAtlasLayout::from_grid(
+        Vec2::new(CURSOR_TEXTURE_SIZE, CURSOR_TEXTURE_SIZE + 1.0),
+        4,
+        1,
+        None,
+        None,
+    );
+    let layout_handle = texture_atlases.add(layout);
+
+    commands.spawn((
+        Cursor,
+        SpriteSheetBundle {
+            atlas: TextureAtlas {
+                layout: layout_handle,
+                index: CURSOR_FULL,
+            },
+            sprite: Sprite::default(),
+            texture: texture_handle,
+            transform: Transform::default().with_scale(Vec3::splat(RENDER_SCALE)),
+            ..default()
+        },
+    ));
+}
+
+pub fn move_cursor(mut q: Query<&mut Transform, With<Cursor>>, mouse_state: Res<MouseState>) {
+    const HALF_CURSOR_SIZE: f32 = CURSOR_TEXTURE_SIZE / 2.0;
+    let mut transform = q.single_mut();
+
+    let Vec2 { x, y } = mouse_state.position;
+    let grid_x = (x / HALF_CURSOR_SIZE).trunc();
+    let grid_y = (y / HALF_CURSOR_SIZE).trunc() - (if grid_x as i32 % 2 != 0 { 0.5 } else { 0.0 });
+
+    let new_position = Vec3::new(grid_x * HALF_CURSOR_SIZE, grid_y * HALF_CURSOR_SIZE, 100.);
+
+    transform.translation = new_position;
 }
